@@ -1,7 +1,10 @@
 #!/bin/bash
 
 # Definición de variables
-name_repo=""
+name_repo="" 
+aws_region="us-east-1" #Virginia por defecto
+ecrRepoArn=""
+ecrRepoUri=""
 
 # Menu de ayuda
 Help()
@@ -40,6 +43,18 @@ if [[ -z "${name_repo}" ]]; then
 fi
 
 # Crear repositorio en ECR y guardar el Arn
+rawECRcreate=$(aws ecr create-repository --region ${aws_region} --repository-name ${name_repo} --no-cli-pager)
+ecrRepoArn=$(jq '.repository.repositoryArn' <<< ${rawECRcreate}) # Parseando Arn
+ecrRepoUri=$(jq '.repository.repositoryUri' <<< ${rawECRcreate}) # Parseando Uri
+
+# Valida que ecrRepoArn y ecrRepoUri existan para continuar
+if [[ -z "${ecrRepoArn}" ]]; then
+    echo "Error aws ecr create-repository: No se obtuvo el valor repositoryArn"
+    exit
+elif [[ -z "${ecrRepoUri}" ]]; then
+    echo "Error aws ecr create-repository: No se obtuvo el valor repositoryUri"
+    exit
+fi
 
 # Crear policy para el user con permisos restringidos
 
